@@ -22,11 +22,14 @@ namespace BaulkCopyServertoSever
         public void MainFunction()
         {
             Console.WriteLine("Working");
-            GetTableNames();
+            GetTableNames(sConStringDownLoad);
             foreach (string sTableName in lstTableNames)
             {
-                DataTable dtWorkingTable = GetSingleTable(sTableName);
-                SuperBulkUploadTable(sTableName, dtWorkingTable, sConStringUpload);
+                if (sTableName.Contains("Vending"))
+                {
+                    DataTable dtWorkingTable = GetSingleTable(sTableName, sConStringDownLoad);
+                    SuperBulkUploadTable(sTableName, dtWorkingTable, sConStringUpload);
+                }
             }
             Console.WriteLine("Done.");
         }
@@ -34,10 +37,10 @@ namespace BaulkCopyServertoSever
         /// Get Names
         /// Gets all the names of tables in your source DB
         /// </summary>
-        private void GetTableNames()
+        private void GetTableNames(string sGetConnString)
         {
             DataTable dtTableDataTable = new DataTable();
-            SqlConnection sqlConnection = new SqlConnection(sConStringDownLoad);
+            SqlConnection sqlConnection = new SqlConnection(sGetConnString);
             sqlConnection.Open();
             SqlDataAdapter sqlOilAdapter = new SqlDataAdapter(sGetTables, sqlConnection);
             sqlOilAdapter.Fill(dtTableDataTable);
@@ -58,11 +61,11 @@ namespace BaulkCopyServertoSever
         /// </summary>
         /// <param name="sTableName"></param>
         /// <returns></returns>
-        public DataTable GetSingleTable(string sTableName)
+        public DataTable GetSingleTable(string sTableName, string sGetConnString)
         {
             DataTable dtTabletoReturn = new DataTable();
             string sCommand = "SELECT * FROM " + sTableName;
-            SqlConnection sqlConnection = new SqlConnection(sConStringDownLoad);
+            SqlConnection sqlConnection = new SqlConnection(sGetConnString);
             sqlConnection.Open();
             SqlDataAdapter sqlOilAdapter = new SqlDataAdapter(sCommand, sqlConnection);
             sqlOilAdapter.Fill(dtTabletoReturn);
@@ -99,6 +102,42 @@ namespace BaulkCopyServertoSever
                 isUploaded = false;
             }
             return isUploaded;
+        }
+
+        public DataTable GetDifferences (DataTable dtTable1, DataTable dtTable2)
+        {
+            DataTable dtTableToReturn= new DataTable();
+            foreach(DataColumn dcColumn in dtTable2.Columns)
+            {
+                dtTableToReturn.Columns.Add(dcColumn.ColumnName, dcColumn.DataType);
+            }
+            foreach(DataRow drFirstRow in dtTable1.Rows)
+            {
+                bool isCanAdd = true;
+                bool isSame = false;
+                foreach(DataRow drSecondRow in dtTable2.Rows)
+                {
+                    if (drFirstRow == drSecondRow)
+                    {
+                        isCanAdd = false;
+                    }
+                    if (drFirstRow[1] == drSecondRow[1])
+                    {
+                        if (drFirstRow == drSecondRow)
+                        {
+                            isSame = true;
+                        }
+                    }
+                }
+                if (isCanAdd)
+                {
+                    if(!isSame)
+                    {
+
+                    }
+                }
+            }
+            return dtTableToReturn;
         }
     }
 }
